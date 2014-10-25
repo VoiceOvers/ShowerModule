@@ -354,9 +354,11 @@ void main()
 
     //Main program loop
     for(;;) {
+    	int numberToDisplay = 0;
         
         if(GPIO_getData(myGpio, GPIO_Number_12) == 1) {
-            
+        	display_on_LCD(numberToDisplay++);
+            DELAY_US(500000);
         }
         
     }
