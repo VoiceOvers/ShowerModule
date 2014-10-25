@@ -44,28 +44,6 @@
 //   Reset the device, and Run example
 //
 //   $End_Boot_Table
-//
-// DESCRIPTION:
-//
-//  This program is the demo program that comes pre-loaded on the controlPad
-//  development kit.  The program starts by flashing the 4 bit binary display.
-//  When the user pushes S3 (GPIO12) the demo then stops flashing the display
-//  and samples the device's internal temperature sensor to establish a 
-//  reference.  After this, the board displays a value of 0x08 and displays 
-//  any increase or decrease in temperature as a delta on the display.  So for
-//  instance if the temperature was initially 20C and now it is 22C, the value
-//  on the display would be 22C - 20C + 8 = 10 = 0x0A = 0b1010.  Additionally,
-//  the reference temperature may be reset to the current value by pressing 
-//  and holding S3.
-//
-//    Watch Variables
-//        referenceTemp
-//        currentTemp
-//
-//###########################################################################
-// $TI Release: LaunchPad f2802x Support Library v100 $
-// $Release Date: Wed Jul 25 10:45:39 CDT 2012 $
-//###########################################################################
 
 #include <stdio.h>
 #include <file.h>
@@ -83,8 +61,6 @@
 #include "f2802x_common/include/sci_io.h"
 #include "f2802x_common/include/wdog.h"
 
-#define CONV_WAIT 1L //Micro-seconds to wait for ADC conversion. Longer than necessary.
-
 extern void DSP28x_usDelay(Uint32 Count);
 
 int16_t referenceTemp;
@@ -96,6 +72,8 @@ FLASH_Handle myFlash;
 GPIO_Handle myGpio;
 PIE_Handle myPie;
 SCI_Handle mySci;
+
+uint8_t digit[] = {0x7E, 0x30, 0x60, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B};
 
 // SCIA  8-bit word, baud rate 0x000F, default, 1 STOP bit, no parity
 void scia_init()
@@ -140,6 +118,101 @@ void scia_init()
     SCI_enable(mySci);
   
     return;
+}
+
+//Take a number 0-99 and displays it on the LCD
+void display_on_LCD(int number)
+{
+	if (number < 0 || number > 99)
+		return;
+
+	int tens = number / 10;
+	int ones = number % 10;
+	uint8_t encodedTen = digit[tens];
+	uint8_t encodedOne = digit[ones];
+
+	int counter = 0;
+	uint8_t bit;
+	//01000000 because encoding is 7 bits long
+	for (bit = 0x40; bit; bit >>= 1)
+	{
+		//bit mask down the line starting from high bits
+		switch (counter)
+		{
+		case 0:
+			if (bit & encodedTen == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_0);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_0);
+			if (bit & encodedOne == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_7);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_7);
+			break;
+		case 1:
+			if (bit & encodedTen == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_1);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_1);
+			if (bit & encodedOne == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_12);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_12);
+			break;
+		case 2:
+			if (bit & encodedTen == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_2);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_2);
+			if (bit & encodedOne == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_16);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_16);
+			break;
+		case 3:
+			if (bit & encodedTen == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_3);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_3);
+			if (bit & encodedOne == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_17);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_17);
+			break;
+		case 4:
+			if (bit & encodedTen == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_4);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_4);
+			if (bit & encodedOne == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_18);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_18);
+			break;
+		case 5:
+			if (bit & encodedTen == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_5);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_5);
+			if (bit & encodedOne == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_19);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_19);
+			break;
+		case 6:
+			if (bit & encodedTen == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_6);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_6);
+			if (bit & encodedOne == 1)
+				GPIO_setHigh(myGpio, GPIO_Number_28);
+			else
+				GPIO_setLow(myGpio, GPIO_Number_28);
+			break;
+
+		}
+		counter++;
+	}
 }
 
 void main()
@@ -195,24 +268,8 @@ void main()
 
     // Initialize SCIA
     scia_init();
-    
-    // Initialize the ADC
-    ADC_enableBandGap(myAdc);
-    ADC_enableRefBuffers(myAdc);
-    ADC_powerUp(myAdc);
-    ADC_enable(myAdc);
-    ADC_setVoltRefSrc(myAdc, ADC_VoltageRefSrc_Int);
 
-    ADC_enableTempSensor(myAdc);                                            //Connect channel A5 internally to the temperature sensor
-    ADC_setSocChanNumber (myAdc, ADC_SocNumber_0, ADC_SocChanNumber_A5);    //Set SOC0 channel select to ADCINA5
-    ADC_setSocChanNumber (myAdc, ADC_SocNumber_1, ADC_SocChanNumber_A5);    //Set SOC1 channel select to ADCINA5
-    ADC_setSocSampleWindow(myAdc, ADC_SocNumber_0, ADC_SocSampleWindow_7_cycles);   //Set SOC0 acquisition period to 7 ADCCLK
-    ADC_setSocSampleWindow(myAdc, ADC_SocNumber_1, ADC_SocSampleWindow_7_cycles);   //Set SOC1 acquisition period to 7 ADCCLK
-    ADC_setIntSrc(myAdc, ADC_IntNumber_1, ADC_IntSrc_EOC1);                 //Connect ADCINT1 to EOC1
-    ADC_enableInt(myAdc, ADC_IntNumber_1);                                  //Enable ADCINT1
-
-    // Set the flash OTP wait-states to minimum. This is important
-    // for the performance of the temperature conversion function.
+    // Set the flash OTP wait-states to minimum.
     FLASH_setup(myFlash);
 
     // Initalize GPIO
@@ -222,20 +279,43 @@ void main()
     GPIO_setMode(myGpio, GPIO_Number_28, GPIO_28_Mode_SCIRXDA);
     GPIO_setMode(myGpio, GPIO_Number_29, GPIO_29_Mode_SCITXDA);
     
-    // Configure GPIO 0-3 as outputs
+    // Configure GPIO 0-6 as outputs, 10's digit
     GPIO_setMode(myGpio, GPIO_Number_0, GPIO_0_Mode_GeneralPurpose);
     GPIO_setMode(myGpio, GPIO_Number_1, GPIO_0_Mode_GeneralPurpose);
     GPIO_setMode(myGpio, GPIO_Number_2, GPIO_0_Mode_GeneralPurpose);
     GPIO_setMode(myGpio, GPIO_Number_3, GPIO_0_Mode_GeneralPurpose);
+    GPIO_setMode(myGpio, GPIO_Number_4, GPIO_0_Mode_GeneralPurpose);
+    GPIO_setMode(myGpio, GPIO_Number_5, GPIO_0_Mode_GeneralPurpose);
+    GPIO_setMode(myGpio, GPIO_Number_6, GPIO_0_Mode_GeneralPurpose);
+
+    //7, 12, 16-19, 28 for 1's digit
+    GPIO_setMode(myGpio, GPIO_Number_7, GPIO_0_Mode_GeneralPurpose);
+	GPIO_setMode(myGpio, GPIO_Number_12, GPIO_0_Mode_GeneralPurpose);
+	GPIO_setMode(myGpio, GPIO_Number_16, GPIO_0_Mode_GeneralPurpose);
+	GPIO_setMode(myGpio, GPIO_Number_17, GPIO_0_Mode_GeneralPurpose);
+	GPIO_setMode(myGpio, GPIO_Number_18, GPIO_0_Mode_GeneralPurpose);
+	GPIO_setMode(myGpio, GPIO_Number_19, GPIO_0_Mode_GeneralPurpose);
+	GPIO_setMode(myGpio, GPIO_Number_28, GPIO_0_Mode_GeneralPurpose);
     
     GPIO_setDirection(myGpio, GPIO_Number_0, GPIO_Direction_Output);
     GPIO_setDirection(myGpio, GPIO_Number_1, GPIO_Direction_Output);
     GPIO_setDirection(myGpio, GPIO_Number_2, GPIO_Direction_Output);
     GPIO_setDirection(myGpio, GPIO_Number_3, GPIO_Direction_Output);
+    GPIO_setDirection(myGpio, GPIO_Number_4, GPIO_Direction_Output);
+    GPIO_setDirection(myGpio, GPIO_Number_5, GPIO_Direction_Output);
+    GPIO_setDirection(myGpio, GPIO_Number_6, GPIO_Direction_Output);
     
+    GPIO_setDirection(myGpio, GPIO_Number_7, GPIO_Direction_Output);
+	GPIO_setDirection(myGpio, GPIO_Number_12, GPIO_Direction_Output);
+	GPIO_setDirection(myGpio, GPIO_Number_16, GPIO_Direction_Output);
+	GPIO_setDirection(myGpio, GPIO_Number_17, GPIO_Direction_Output);
+	GPIO_setDirection(myGpio, GPIO_Number_18, GPIO_Direction_Output);
+	GPIO_setDirection(myGpio, GPIO_Number_19, GPIO_Direction_Output);
+	GPIO_setDirection(myGpio, GPIO_Number_28, GPIO_Direction_Output);
+/*
     GPIO_setMode(myGpio, GPIO_Number_12, GPIO_12_Mode_GeneralPurpose);
     GPIO_setDirection(myGpio, GPIO_Number_12, GPIO_Direction_Input);
-    GPIO_setPullUp(myGpio, GPIO_Number_12, GPIO_PullUp_Disable);
+    GPIO_setPullUp(myGpio, GPIO_Number_12, GPIO_PullUp_Disable);*/
     
     //Redirect STDOUT to SCI
     status = add_device("scia", _SSA, SCI_open, SCI_close, SCI_read, SCI_write, SCI_lseek, SCI_unlink, SCI_rename);
@@ -272,7 +352,7 @@ void main()
         DELAY_US(500000);
     }
 
-    //Main program loop - continually sample temperature
+    //Main program loop
     for(;;) {
         
         if(GPIO_getData(myGpio, GPIO_Number_12) == 1) {
