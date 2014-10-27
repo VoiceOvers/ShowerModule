@@ -61,6 +61,18 @@
 #include "f2802x_common/include/sci_io.h"
 #include "f2802x_common/include/wdog.h"
 
+#define BYTETOBINARYPATTERN "%d%d%d%d%d%d%d%d"
+#define BYTETOBINARY(byte)  \
+  (byte & 0x80 ? 1 : 0), \
+  (byte & 0x40 ? 1 : 0), \
+  (byte & 0x20 ? 1 : 0), \
+  (byte & 0x10 ? 1 : 0), \
+  (byte & 0x08 ? 1 : 0), \
+  (byte & 0x04 ? 1 : 0), \
+  (byte & 0x02 ? 1 : 0), \
+  (byte & 0x01 ? 1 : 0)
+//printf ("Leading text "BYTETOBINARYPATTERN, BYTETOBINARY(byte));
+
 extern void DSP28x_usDelay(Uint32 Count);
 
 int16_t referenceTemp;
@@ -73,7 +85,7 @@ GPIO_Handle myGpio;
 PIE_Handle myPie;
 SCI_Handle mySci;
 
-uint8_t digit[] = {0x7E, 0x30, 0x60, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B};
+uint8_t digit[] = {0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B};
 
 // SCIA  8-bit word, baud rate 0x000F, default, 1 STOP bit, no parity
 void scia_init()
@@ -130,81 +142,90 @@ void display_on_LCD(int number)
 	int ones = number % 10;
 	uint8_t encodedTen = digit[tens];
 	uint8_t encodedOne = digit[ones];
-
+	printf("Displaying %i \n\r", number);
 	int counter = 0;
 	uint8_t bit;
+	//GPIO_setHigh(myGpio, GPIO_Number_0);
+	//GPIO_setHigh(myGpio, GPIO_Number_1);
 	//01000000 because encoding is 7 bits long
 	for (bit = 0x40; bit; bit >>= 1)
 	{
-		//bit mask down the line starting from high bits
+
+
 		switch (counter)
 		{
 		case 0:
-			if (bit & encodedTen == 1)
+			if ((bit & encodedTen) >> 6 == 1)
+			{
 				GPIO_setHigh(myGpio, GPIO_Number_0);
+				//printf("Set 0 high\n\r");
+			}
 			else
+			{
 				GPIO_setLow(myGpio, GPIO_Number_0);
-			if (bit & encodedOne == 1)
+				//printf("Set 0 low\n\r");
+			}
+			if ((bit & encodedOne) >> 6 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_7);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_7);
 			break;
 		case 1:
-			if (bit & encodedTen == 1)
+			if ((bit & encodedTen) >> 5 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_1);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_1);
-			if (bit & encodedOne == 1)
+			if ((bit & encodedOne) >> 5 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_12);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_12);
 			break;
 		case 2:
-			if (bit & encodedTen == 1)
+			if ((bit & encodedTen) >> 4 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_2);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_2);
-			if (bit & encodedOne == 1)
+			if ((bit & encodedOne) >> 4 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_16);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_16);
 			break;
 		case 3:
-			if (bit & encodedTen == 1)
+			if ((bit & encodedTen) >> 3 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_3);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_3);
-			if (bit & encodedOne == 1)
+			if ((bit & encodedOne) >> 3 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_17);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_17);
 			break;
 		case 4:
-			if (bit & encodedTen == 1)
+			if ((bit & encodedTen) >> 2 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_4);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_4);
-			if (bit & encodedOne == 1)
+			if ((bit & encodedOne) >> 2 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_18);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_18);
 			break;
 		case 5:
-			if (bit & encodedTen == 1)
+			if ((bit & encodedTen) >> 1 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_5);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_5);
-			if (bit & encodedOne == 1)
+			if ((bit & encodedOne) >> 1 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_19);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_19);
 			break;
 		case 6:
-			if (bit & encodedTen == 1)
+			if ((bit & encodedTen) == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_6);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_6);
-			if (bit & encodedOne == 1)
+			if ((bit & encodedOne) == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_28);
 			else
 				GPIO_setLow(myGpio, GPIO_Number_28);
@@ -325,7 +346,7 @@ void main()
 
         
     //Scan the LEDs until the pushbutton is pressed
-    while(GPIO_getData(myGpio, GPIO_Number_12) != 1)
+   /* while(GPIO_getData(myGpio, GPIO_Number_12) != 1)
     {       
         GPIO_setHigh(myGpio, GPIO_Number_0);
         GPIO_setHigh(myGpio, GPIO_Number_1);
@@ -350,16 +371,16 @@ void main()
         GPIO_setHigh(myGpio, GPIO_Number_2);
         GPIO_setHigh(myGpio, GPIO_Number_3);
         DELAY_US(500000);
-    }
-
+    }*/
+    int numberToDisplay = 0;
     //Main program loop
     for(;;) {
-    	int numberToDisplay = 0;
+
         
-        if(GPIO_getData(myGpio, GPIO_Number_12) == 1) {
+        //if(GPIO_getData(myGpio, GPIO_Number_12) == 1) {
         	display_on_LCD(numberToDisplay++);
-            DELAY_US(500000);
-        }
+            DELAY_US(200000);
+        //}
         
     }
 }
