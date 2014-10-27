@@ -72,6 +72,9 @@
   (byte & 0x02 ? 1 : 0), \
   (byte & 0x01 ? 1 : 0)
 //printf ("Leading text "BYTETOBINARYPATTERN, BYTETOBINARY(byte));
+#define MOTOR_MAX 3.89
+#define MOTOR_MIN 1.8
+#define MOTOR_POSITIONS 100
 
 extern void DSP28x_usDelay(Uint32 Count);
 
@@ -86,6 +89,7 @@ PIE_Handle myPie;
 SCI_Handle mySci;
 
 uint8_t digit[] = {0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B};
+double motorIncrement = (MOTOR_MIN + MOTOR_MAX) / 100;
 
 // SCIA  8-bit word, baud rate 0x000F, default, 1 STOP bit, no parity
 void scia_init()
@@ -142,29 +146,20 @@ void display_on_LCD(int number)
 	int ones = number % 10;
 	uint8_t encodedTen = digit[tens];
 	uint8_t encodedOne = digit[ones];
-	printf("Displaying %i \n\r", number);
+
 	int counter = 0;
 	uint8_t bit;
-	//GPIO_setHigh(myGpio, GPIO_Number_0);
-	//GPIO_setHigh(myGpio, GPIO_Number_1);
+
 	//01000000 because encoding is 7 bits long
 	for (bit = 0x40; bit; bit >>= 1)
 	{
-
-
 		switch (counter)
 		{
 		case 0:
 			if ((bit & encodedTen) >> 6 == 1)
-			{
 				GPIO_setHigh(myGpio, GPIO_Number_0);
-				//printf("Set 0 high\n\r");
-			}
 			else
-			{
 				GPIO_setLow(myGpio, GPIO_Number_0);
-				//printf("Set 0 low\n\r");
-			}
 			if ((bit & encodedOne) >> 6 == 1)
 				GPIO_setHigh(myGpio, GPIO_Number_7);
 			else
@@ -234,6 +229,16 @@ void display_on_LCD(int number)
 		}
 		counter++;
 	}
+}
+
+double pwm_period_for_motor(int position)
+{
+	if (position < 0)
+		return MOTOR_MIN;
+	if (position > MOTOR_POSITIONS - 1)
+		return MOTOR_MAX;
+
+	return MOTOR_MIN + (position * motorIncrement);
 }
 
 void main()
