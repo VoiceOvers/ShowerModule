@@ -76,8 +76,33 @@
 #define MOTOR_MIN 1.8
 #define MOTOR_POSITIONS 100
 
+// Configure the period for each timer
+#define EPWM1_TIMER_TBPRD  23340  // Period register
+#define EPWM1_MAX_CMPA     23340
+#define EPWM1_MIN_CMPA      23340/2
+#define EPWM1_MAX_CMPB     23340
+#define EPWM1_MIN_CMPB      23340/2
+
+// To keep track of which way the compare value is moving
+#define EPWM_CMP_UP   1
+#define EPWM_CMP_DOWN 0
+
 extern void DSP28x_usDelay(Uint32 Count);
 
+typedef struct
+{
+//    volatile struct EPWM_REGS *EPwmRegHandle;
+    PWM_Handle myPwmHandle;
+    uint16_t EPwm_CMPA_Direction;
+    uint16_t EPwm_CMPB_Direction;
+    uint16_t EPwmTimerIntCount;
+    uint16_t EPwmMaxCMPA;
+    uint16_t EPwmMinCMPA;
+    uint16_t EPwmMaxCMPB;
+    uint16_t EPwmMinCMPB;
+}EPWM_INFO;
+
+EPWM_INFO epwm1_info;
 int16_t referenceTemp;
 int16_t currentTemp;
 
@@ -87,9 +112,13 @@ FLASH_Handle myFlash;
 GPIO_Handle myGpio;
 PIE_Handle myPie;
 SCI_Handle mySci;
+PWM_Handle myPwm1;
 
 uint8_t digit[] = {0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B};
 double motorIncrement = (MOTOR_MIN + MOTOR_MAX) / 100;
+
+GPIO_Number_e digit1Pins[] = {GPIO_Number_0, GPIO_Number_1, GPIO_Number_2, GPIO_Number_3, GPIO_Number_4, GPIO_Number_5, GPIO_Number_6};
+GPIO_Number_e digit2Pins[] = {GPIO_Number_7, GPIO_Number_12, GPIO_Number_16, GPIO_Number_17, GPIO_Number_18, GPIO_Number_19, GPIO_Number_28};
 
 // SCIA  8-bit word, baud rate 0x000F, default, 1 STOP bit, no parity
 void scia_init()
@@ -157,73 +186,73 @@ void display_on_LCD(int number)
 		{
 		case 0:
 			if ((bit & encodedTen) >> 6 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_0);
+				GPIO_setHigh(myGpio, digit1Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_0);
+				GPIO_setLow(myGpio, digit1Pins[counter]);
 			if ((bit & encodedOne) >> 6 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_7);
+				GPIO_setHigh(myGpio, digit2Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_7);
+				GPIO_setLow(myGpio, digit2Pins[counter]);
 			break;
 		case 1:
 			if ((bit & encodedTen) >> 5 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_1);
+				GPIO_setHigh(myGpio, digit1Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_1);
+				GPIO_setLow(myGpio, digit1Pins[counter]);
 			if ((bit & encodedOne) >> 5 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_12);
+				GPIO_setHigh(myGpio, digit2Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_12);
+				GPIO_setLow(myGpio, digit2Pins[counter]);
 			break;
 		case 2:
 			if ((bit & encodedTen) >> 4 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_2);
+				GPIO_setHigh(myGpio, digit1Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_2);
+				GPIO_setLow(myGpio, digit1Pins[counter]);
 			if ((bit & encodedOne) >> 4 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_16);
+				GPIO_setHigh(myGpio, digit2Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_16);
+				GPIO_setLow(myGpio, digit2Pins[counter]);
 			break;
 		case 3:
 			if ((bit & encodedTen) >> 3 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_3);
+				GPIO_setHigh(myGpio, digit1Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_3);
+				GPIO_setLow(myGpio, digit1Pins[counter]);
 			if ((bit & encodedOne) >> 3 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_17);
+				GPIO_setHigh(myGpio, digit2Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_17);
+				GPIO_setLow(myGpio, digit2Pins[counter]);
 			break;
 		case 4:
 			if ((bit & encodedTen) >> 2 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_4);
+				GPIO_setHigh(myGpio, digit1Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_4);
+				GPIO_setLow(myGpio, digit1Pins[counter]);
 			if ((bit & encodedOne) >> 2 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_18);
+				GPIO_setHigh(myGpio, digit2Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_18);
+				GPIO_setLow(myGpio, digit2Pins[counter]);
 			break;
 		case 5:
 			if ((bit & encodedTen) >> 1 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_5);
+				GPIO_setHigh(myGpio, digit1Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_5);
+				GPIO_setLow(myGpio, digit1Pins[counter]);
 			if ((bit & encodedOne) >> 1 == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_19);
+				GPIO_setHigh(myGpio, digit2Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_19);
+				GPIO_setLow(myGpio, digit2Pins[counter]);
 			break;
 		case 6:
 			if ((bit & encodedTen) == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_6);
+				GPIO_setHigh(myGpio, digit1Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_6);
+				GPIO_setLow(myGpio, digit1Pins[counter]);
 			if ((bit & encodedOne) == 1)
-				GPIO_setHigh(myGpio, GPIO_Number_28);
+				GPIO_setHigh(myGpio, digit2Pins[counter]);
 			else
-				GPIO_setLow(myGpio, GPIO_Number_28);
+				GPIO_setLow(myGpio, digit2Pins[counter]);
 			break;
 
 		}
@@ -241,6 +270,68 @@ double pwm_period_for_motor(int position)
 	return MOTOR_MIN + (position * motorIncrement);
 }
 
+interrupt void epwm1_isr(void)
+{
+    // Update the CMPA and CMPB values
+    //update_compare(&epwm1_info);
+
+    // Clear INT flag for this timer
+    PWM_clearIntFlag(myPwm1);
+
+    // Acknowledge this interrupt to receive more interrupts from group 3
+    PIE_clearInt(myPie, PIE_GroupNumber_3);
+}
+
+void InitEPwm1()
+{
+
+    CLK_enablePwmClock(myClk, PWM_Number_1);
+
+    // Setup TBCLK
+    PWM_setCounterMode(myPwm1, PWM_CounterMode_Up);         // Count up
+    PWM_setPeriod(myPwm1, EPWM1_TIMER_TBPRD);               // Set timer period
+    PWM_disableCounterLoad(myPwm1);                         // Disable phase loading
+    PWM_setPhase(myPwm1, 0x0000);                           // Phase is 0
+    PWM_setCount(myPwm1, 0x0000);                           // Clear counter
+    PWM_setHighSpeedClkDiv(myPwm1, PWM_HspClkDiv_by_10);     // Clock ratio to SYSCLKOUT
+    PWM_setClkDiv(myPwm1, PWM_ClkDiv_by_1);
+
+    // Setup shadow register load on ZERO
+    PWM_setShadowMode_CmpA(myPwm1, PWM_ShadowMode_Shadow);
+    PWM_setShadowMode_CmpB(myPwm1, PWM_ShadowMode_Shadow);
+    PWM_setLoadMode_CmpA(myPwm1, PWM_LoadMode_Zero);
+    PWM_setLoadMode_CmpB(myPwm1, PWM_LoadMode_Zero);
+
+    // Set Compare values
+    PWM_setCmpA(myPwm1, EPWM1_MIN_CMPA);    // Set compare A value
+    PWM_setCmpB(myPwm1, EPWM1_MIN_CMPB);    // Set Compare B value
+
+    // Set actions
+    PWM_setActionQual_Zero_PwmA(myPwm1, PWM_ActionQual_Set);            // Set PWM1A on Zero
+    PWM_setActionQual_CntUp_CmpA_PwmA(myPwm1, PWM_ActionQual_Clear);    // Clear PWM1A on event A, up count
+
+    PWM_setActionQual_Zero_PwmB(myPwm1, PWM_ActionQual_Set);            // Set PWM1B on Zero
+    PWM_setActionQual_CntUp_CmpB_PwmB(myPwm1, PWM_ActionQual_Clear);    // Clear PWM1B on event B, up count
+
+    // Interrupt where we will change the Compare Values
+    PWM_setIntMode(myPwm1, PWM_IntMode_CounterEqualZero);   // Select INT on Zero event
+    PWM_enableInt(myPwm1);                                  // Enable INT
+    PWM_setIntPeriod(myPwm1, PWM_IntPeriod_ThirdEvent);     // Generate INT on 3rd event
+
+    // Information this example uses to keep track
+    // of the direction the CMPA/CMPB values are
+    // moving, the min and max allowed values and
+    // a pointer to the correct ePWM registers
+    epwm1_info.EPwm_CMPA_Direction = EPWM_CMP_UP;   // Start by increasing CMPA & CMPB
+    epwm1_info.EPwm_CMPB_Direction = EPWM_CMP_UP;
+    epwm1_info.EPwmTimerIntCount = 0;               // Zero the interrupt counter
+    epwm1_info.myPwmHandle = myPwm1;                // Set the pointer to the ePWM module
+    epwm1_info.EPwmMaxCMPA = EPWM1_MAX_CMPA;        // Setup min/max CMPA/CMPB values
+    epwm1_info.EPwmMinCMPA = EPWM1_MIN_CMPA;
+    epwm1_info.EPwmMaxCMPB = EPWM1_MAX_CMPB;
+    epwm1_info.EPwmMinCMPB = EPWM1_MIN_CMPB;
+}
+
 void main()
 {
     volatile int status = 0;
@@ -250,7 +341,7 @@ void main()
     PLL_Handle myPll;
     WDOG_Handle myWDog;
     
-    // Initialize all the handles needed for this application    
+    // Initialize all the handles needed for this application
     myAdc = ADC_init((void *)ADC_BASE_ADDR, sizeof(ADC_Obj));
     myClk = CLK_init((void *)CLK_BASE_ADDR, sizeof(CLK_Obj));
     myCpu = CPU_init((void *)NULL, sizeof(CPU_Obj));
@@ -260,11 +351,13 @@ void main()
     myPll = PLL_init((void *)PLL_BASE_ADDR, sizeof(PLL_Obj));
     mySci = SCI_init((void *)SCIA_BASE_ADDR, sizeof(SCI_Obj));
     myWDog = WDOG_init((void *)WDOG_BASE_ADDR, sizeof(WDOG_Obj));
+    myPwm1 = PWM_init((void *)PWM_ePWM1_BASE_ADDR, sizeof(PWM_Obj));
 
     // Perform basic system initialization    
     WDOG_disable(myWDog);
     CLK_enableAdcClock(myClk);
     (*Device_cal)();
+    CLK_disableAdcClock(myClk);
     
     //Select the internal oscillator 1 as the clock source
     CLK_setOscSrc(myClk, CLK_OscSrc_Internal);
@@ -306,8 +399,8 @@ void main()
     GPIO_setMode(myGpio, GPIO_Number_29, GPIO_29_Mode_SCITXDA);
     
     // Configure GPIO 0-6 as outputs, 10's digit
-    GPIO_setMode(myGpio, GPIO_Number_0, GPIO_0_Mode_GeneralPurpose);
-    GPIO_setMode(myGpio, GPIO_Number_1, GPIO_0_Mode_GeneralPurpose);
+   // GPIO_setMode(myGpio, GPIO_Number_0, GPIO_0_Mode_GeneralPurpose);
+    //GPIO_setMode(myGpio, GPIO_Number_1, GPIO_0_Mode_GeneralPurpose);
     GPIO_setMode(myGpio, GPIO_Number_2, GPIO_0_Mode_GeneralPurpose);
     GPIO_setMode(myGpio, GPIO_Number_3, GPIO_0_Mode_GeneralPurpose);
     GPIO_setMode(myGpio, GPIO_Number_4, GPIO_0_Mode_GeneralPurpose);
@@ -323,8 +416,8 @@ void main()
 	GPIO_setMode(myGpio, GPIO_Number_19, GPIO_0_Mode_GeneralPurpose);
 	GPIO_setMode(myGpio, GPIO_Number_28, GPIO_0_Mode_GeneralPurpose);
     
-    GPIO_setDirection(myGpio, GPIO_Number_0, GPIO_Direction_Output);
-    GPIO_setDirection(myGpio, GPIO_Number_1, GPIO_Direction_Output);
+    //GPIO_setDirection(myGpio, GPIO_Number_0, GPIO_Direction_Output);
+    //GPIO_setDirection(myGpio, GPIO_Number_1, GPIO_Direction_Output);
     GPIO_setDirection(myGpio, GPIO_Number_2, GPIO_Direction_Output);
     GPIO_setDirection(myGpio, GPIO_Number_3, GPIO_Direction_Output);
     GPIO_setDirection(myGpio, GPIO_Number_4, GPIO_Direction_Output);
@@ -338,16 +431,39 @@ void main()
 	GPIO_setDirection(myGpio, GPIO_Number_18, GPIO_Direction_Output);
 	GPIO_setDirection(myGpio, GPIO_Number_19, GPIO_Direction_Output);
 	GPIO_setDirection(myGpio, GPIO_Number_28, GPIO_Direction_Output);
-/*
-    GPIO_setMode(myGpio, GPIO_Number_12, GPIO_12_Mode_GeneralPurpose);
-    GPIO_setDirection(myGpio, GPIO_Number_12, GPIO_Direction_Input);
-    GPIO_setPullUp(myGpio, GPIO_Number_12, GPIO_PullUp_Disable);*/
+
+	GPIO_setPullUp(myGpio, GPIO_Number_0, GPIO_PullUp_Disable);
+	GPIO_setPullUp(myGpio, GPIO_Number_1, GPIO_PullUp_Disable);
+	GPIO_setMode(myGpio, GPIO_Number_0, GPIO_0_Mode_EPWM1A);
+	GPIO_setMode(myGpio, GPIO_Number_1, GPIO_1_Mode_EPWM1B);
+
+	// Register interrupt handlers in the PIE vector table
+	PIE_registerPieIntHandler(myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_1, (intVec_t)&epwm1_isr);
+
+	CLK_disableTbClockSync(myClk);
+	InitEPwm1();
+	CLK_enableTbClockSync(myClk);
+
+	// Enable CPU INT3 which is connected to EPWM1-3 INT:
+	CPU_enableInt(myCpu, CPU_IntNumber_3);
+
+	// Enable EPWM INTn in the PIE: Group 3 interrupt 1
+	PIE_enablePwmInt(myPie, PWM_Number_1);
+
+	CPU_enableGlobalInts(myCpu);
+	CPU_enableDebugInt(myCpu);
+
+    GPIO_setMode(myGpio, GPIO_Number_32, GPIO_32_Mode_GeneralPurpose);
+    GPIO_setDirection(myGpio, GPIO_Number_32, GPIO_Direction_Input);
+    GPIO_setPullUp(myGpio, GPIO_Number_32, GPIO_PullUp_Disable);
     
     //Redirect STDOUT to SCI
     status = add_device("scia", _SSA, SCI_open, SCI_close, SCI_read, SCI_write, SCI_lseek, SCI_unlink, SCI_rename);
     fid = fopen("scia","w");
     freopen("scia:", "w", stdout);
     setvbuf(stdout, NULL, _IONBF, 0);
+
+    GPIO_setHigh(myGpio, GPIO_Number_28);
 
         
     //Scan the LEDs until the pushbutton is pressed
@@ -378,16 +494,33 @@ void main()
         DELAY_US(500000);
     }*/
     int numberToDisplay = 0;
+    int microsecondsLeft = 200;
+    bool checkEveryTime = false;
     //Main program loop
     for(;;) {
-
-        
-        //if(GPIO_getData(myGpio, GPIO_Number_12) == 1) {
-        	display_on_LCD(numberToDisplay++);
-            DELAY_US(200000);
-        //}
-        
+    if (checkEveryTime && microsecondsLeft > 0)
+    {
+    	DELAY_US(1);
+    	if (GPIO_getData(myGpio, GPIO_Number_32)==1)
+    		printf("%i: 1, ", microsecondsLeft--);
+    	else if (GPIO_getData(myGpio, GPIO_Number_32) == 0)
+    		printf("%i: 0, ", microsecondsLeft--);
     }
+        
+    else if(GPIO_getData(myGpio, GPIO_Number_32) == 1 && !checkEveryTime) {
+        	//display_on_LCD(numberToDisplay++);
+        	checkEveryTime = true;
+            DELAY_US(1);
+        }
+    /*if (GPIO_getData(myGpio, GPIO_Number_32) == 1)
+            printf("1, ");
+    else if (GPIO_getData(myGpio, GPIO_Number_32) == 0)
+           printf("0, ");
+
+    DELAY_US(100000);*/
+    }
+
+
 }
 
 
