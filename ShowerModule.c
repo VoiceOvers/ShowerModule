@@ -72,7 +72,7 @@
   (byte & 0x02 ? 1 : 0), \
   (byte & 0x01 ? 1 : 0)
 //printf ("Leading text "BYTETOBINARYPATTERN, BYTETOBINARY(byte));
-#define MOTOR_MAX 3.89
+#define MOTOR_MAX 3.89 //in milliseconds
 #define MOTOR_MIN 1.8
 #define MOTOR_POSITIONS 100
 
@@ -115,7 +115,7 @@ SCI_Handle mySci;
 PWM_Handle myPwm1;
 
 uint8_t digit[] = {0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B};
-double motorIncrement = (MOTOR_MIN + MOTOR_MAX) / 100;
+double motorIncrement = (MOTOR_MIN + MOTOR_MAX) / MOTOR_POSITIONS;
 
 GPIO_Number_e digit1Pins[] = {GPIO_Number_2, GPIO_Number_3, GPIO_Number_4, GPIO_Number_5, GPIO_Number_6, GPIO_Number_7, GPIO_Number_12}; //Avoid 0 and 1 for PWM
 GPIO_Number_e digit2Pins[] = {GPIO_Number_16, GPIO_Number_17, GPIO_Number_18, GPIO_Number_19, GPIO_Number_32, GPIO_Number_33, GPIO_Number_34}; //Avoid 28 and 29 for console output
@@ -198,19 +198,35 @@ void display_on_LCD(int number)
 	}
 }
 
+//Returns the needed period for a particular numerical position in seconds
 double pwm_period_for_motor(int position)
 {
 	if (position < 0)
-		return MOTOR_MIN;
+		return MOTOR_MIN / 1000;
 	if (position > MOTOR_POSITIONS - 1)
-		return MOTOR_MAX;
+		return MOTOR_MAX / 1000;
 
-	return MOTOR_MIN + (position * motorIncrement);
+	return (MOTOR_MIN + (position * motorIncrement)) / 1000;
 }
 
 void turn_motor_to(int position)
 {
 	display_on_LCD(position);
+	int sysclkout = 60000000;
+	int highSpeedClkDiv = 10;
+	int clkDiv = 1;
+	int PWMPeriod = (pwm_period_for_motor(position) * sysclkout) / (highSpeedClkDiv * clkDiv);
+	int halfPWMPeriod = PWMPeriod / 2;
+
+    // Set Compare values
+    PWM_setCmpA(myPwm1, halfPWMPeriod);    // Set compare A value
+    PWM_setCmpB(myPwm1, halfPWMPeriod);    // Set compare B value
+    PWM_setPeriod(myPwm1, PWMPeriod);
+
+    epwm1_info.EPwmMaxCMPA = PWMPEriod;
+    epwm1_info.EPwmMinCMPA = halfPWMPeriod;
+    epwm1_info.EPwmMaxCMPB = PWMPeriod;
+    epwm1_info.EPwmMinCMPB = halfPWMPeriod;
 }
 
 interrupt void epwm1_isr(void)
@@ -247,7 +263,7 @@ void InitEPwm1()
 
     // Set Compare values
     PWM_setCmpA(myPwm1, EPWM1_MIN_CMPA);    // Set compare A value
-    PWM_setCmpB(myPwm1, EPWM1_MIN_CMPB);    // Set Compare B value
+    PWM_setCmpB(myPwm1, EPWM1_MIN_CMPB);    // Set compare B value
 
     // Set actions
     PWM_setActionQual_Zero_PwmA(myPwm1, PWM_ActionQual_Set);            // Set PWM1A on Zero
@@ -394,10 +410,14 @@ void main()
 		if (GPIO_getData(myGpio, upButton) == 1)
 		{
 			printf("up, ");
+			if (currentPosition < 99)
+				turn_motor_to(++currentPosition);
 		}
 		else if (GPIO_getData(myGpio, downButton) == 1)
 		{
 			printf("down, ");
+			if (currentPosition > 0)
+				turn_motor_to(--currentPosition);
 		}
 
 		DELAY_US(75000);
