@@ -208,6 +208,11 @@ double pwm_period_for_motor(int position)
 	return MOTOR_MIN + (position * motorIncrement);
 }
 
+void turn_motor_to(int position)
+{
+	display_on_LCD(position);
+}
+
 interrupt void epwm1_isr(void)
 {
     // Update the CMPA and CMPB values
@@ -350,6 +355,14 @@ void main()
 	GPIO_setMode(myGpio, GPIO_Number_0, GPIO_0_Mode_EPWM1A);
 	GPIO_setMode(myGpio, GPIO_Number_1, GPIO_1_Mode_EPWM1B);
 
+    GPIO_setMode(myGpio, upButton, GPIO_0_Mode_GeneralPurpose);
+    GPIO_setDirection(myGpio, upButton, GPIO_Direction_Input);
+    GPIO_setPullUp(myGpio, upButton, GPIO_PullUp_Disable);
+
+    GPIO_setMode(myGpio, downButton, GPIO_0_Mode_GeneralPurpose);
+    GPIO_setDirection(myGpio, downButton, GPIO_Direction_Input);
+    GPIO_setPullUp(myGpio, downButton, GPIO_PullUp_Disable);
+
 	// Register interrupt handlers in the PIE vector table
 	PIE_registerPieIntHandler(myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_1, (intVec_t)&epwm1_isr);
 
@@ -365,10 +378,6 @@ void main()
 
 	CPU_enableGlobalInts(myCpu);
 	CPU_enableDebugInt(myCpu);
-
-    GPIO_setMode(myGpio, GPIO_Number_32, GPIO_32_Mode_GeneralPurpose);
-    GPIO_setDirection(myGpio, GPIO_Number_32, GPIO_Direction_Input);
-    GPIO_setPullUp(myGpio, GPIO_Number_32, GPIO_PullUp_Disable);
     
     //Redirect STDOUT to SCI
     status = add_device("scia", _SSA, SCI_open, SCI_close, SCI_read, SCI_write, SCI_lseek, SCI_unlink, SCI_rename);
@@ -376,64 +385,23 @@ void main()
     freopen("scia:", "w", stdout);
     setvbuf(stdout, NULL, _IONBF, 0);
 
-    GPIO_setHigh(myGpio, GPIO_Number_28);
+    int currentPosition = 0;
+    turn_motor_to(currentPosition);
 
-        
-    //Scan the LEDs until the pushbutton is pressed
-   /* while(GPIO_getData(myGpio, GPIO_Number_12) != 1)
-    {       
-        GPIO_setHigh(myGpio, GPIO_Number_0);
-        GPIO_setHigh(myGpio, GPIO_Number_1);
-        GPIO_setHigh(myGpio, GPIO_Number_2);
-        GPIO_setLow(myGpio, GPIO_Number_3);
-        DELAY_US(50000);
-
-        GPIO_setHigh(myGpio, GPIO_Number_0);
-        GPIO_setHigh(myGpio, GPIO_Number_1);
-        GPIO_setLow(myGpio, GPIO_Number_2);
-        GPIO_setHigh(myGpio, GPIO_Number_3);
-        DELAY_US(50000);
-
-        GPIO_setHigh(myGpio, GPIO_Number_0);
-        GPIO_setLow(myGpio, GPIO_Number_1);
-        GPIO_setHigh(myGpio, GPIO_Number_2);
-        GPIO_setHigh(myGpio, GPIO_Number_3);
-        DELAY_US(50000);
-
-        GPIO_setLow(myGpio, GPIO_Number_0);
-        GPIO_setHigh(myGpio, GPIO_Number_1);
-        GPIO_setHigh(myGpio, GPIO_Number_2);
-        GPIO_setHigh(myGpio, GPIO_Number_3);
-        DELAY_US(500000);
-    }*/
-    int numberToDisplay = 0;
-    int microsecondsLeft = 200;
-    bool checkEveryTime = false;
     //Main program loop
-    for(;;) {
-    if (checkEveryTime && microsecondsLeft > 0)
+    for(;;)
     {
-    	DELAY_US(1);
-    	if (GPIO_getData(myGpio, GPIO_Number_32)==1)
-    		printf("%i: 1, ", microsecondsLeft--);
-    	else if (GPIO_getData(myGpio, GPIO_Number_32) == 0)
-    		printf("%i: 0, ", microsecondsLeft--);
+		if (GPIO_getData(myGpio, upButton) == 1)
+		{
+			printf("up, ");
+		}
+		else if (GPIO_getData(myGpio, downButton) == 1)
+		{
+			printf("down, ");
+		}
+
+		DELAY_US(75000);
     }
-        
-    else if(GPIO_getData(myGpio, GPIO_Number_32) == 1 && !checkEveryTime) {
-        	//display_on_LCD(numberToDisplay++);
-        	checkEveryTime = true;
-            DELAY_US(1);
-        }
-    /*if (GPIO_getData(myGpio, GPIO_Number_32) == 1)
-            printf("1, ");
-    else if (GPIO_getData(myGpio, GPIO_Number_32) == 0)
-           printf("0, ");
-
-    DELAY_US(100000);*/
-    }
-
-
 }
 
 
