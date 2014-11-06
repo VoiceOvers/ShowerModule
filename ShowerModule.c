@@ -177,86 +177,22 @@ void display_on_LCD(int number)
 	uint8_t encodedOne = digit[ones];
 
 	int counter = 0;
+	int downCounter = 6;
 	uint8_t bit;
 
 	//01000000 because encoding is 7 bits long
 	for (bit = 0x40; bit; bit >>= 1)
 	{
-		switch (counter)
-		{
-		case 0:
-			if ((bit & encodedTen) >> 6 == 1)
-				GPIO_setHigh(myGpio, digit1Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit1Pins[counter]);
-			if ((bit & encodedOne) >> 6 == 1)
-				GPIO_setHigh(myGpio, digit2Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit2Pins[counter]);
-			break;
-		case 1:
-			if ((bit & encodedTen) >> 5 == 1)
-				GPIO_setHigh(myGpio, digit1Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit1Pins[counter]);
-			if ((bit & encodedOne) >> 5 == 1)
-				GPIO_setHigh(myGpio, digit2Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit2Pins[counter]);
-			break;
-		case 2:
-			if ((bit & encodedTen) >> 4 == 1)
-				GPIO_setHigh(myGpio, digit1Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit1Pins[counter]);
-			if ((bit & encodedOne) >> 4 == 1)
-				GPIO_setHigh(myGpio, digit2Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit2Pins[counter]);
-			break;
-		case 3:
-			if ((bit & encodedTen) >> 3 == 1)
-				GPIO_setHigh(myGpio, digit1Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit1Pins[counter]);
-			if ((bit & encodedOne) >> 3 == 1)
-				GPIO_setHigh(myGpio, digit2Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit2Pins[counter]);
-			break;
-		case 4:
-			if ((bit & encodedTen) >> 2 == 1)
-				GPIO_setHigh(myGpio, digit1Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit1Pins[counter]);
-			if ((bit & encodedOne) >> 2 == 1)
-				GPIO_setHigh(myGpio, digit2Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit2Pins[counter]);
-			break;
-		case 5:
-			if ((bit & encodedTen) >> 1 == 1)
-				GPIO_setHigh(myGpio, digit1Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit1Pins[counter]);
-			if ((bit & encodedOne) >> 1 == 1)
-				GPIO_setHigh(myGpio, digit2Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit2Pins[counter]);
-			break;
-		case 6:
-			if ((bit & encodedTen) == 1)
-				GPIO_setHigh(myGpio, digit1Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit1Pins[counter]);
-			if ((bit & encodedOne) == 1)
-				GPIO_setHigh(myGpio, digit2Pins[counter]);
-			else
-				GPIO_setLow(myGpio, digit2Pins[counter]);
-			break;
-
-		}
+		if ((bit & encodedTen) >> downCounter == 1)
+			GPIO_setHigh(myGpio, digit1Pins[counter]);
+		else
+			GPIO_setLow(myGpio, digit1Pins[counter]);
+		if ((bit & encodedOne) >> downCounter == 1)
+			GPIO_setHigh(myGpio, digit2Pins[counter]);
+		else
+			GPIO_setLow(myGpio, digit2Pins[counter]);
 		counter++;
+		downCounter--;
 	}
 }
 
