@@ -334,39 +334,14 @@ void main()
     GPIO_setMode(myGpio, GPIO_Number_28, GPIO_28_Mode_SCIRXDA);
     GPIO_setMode(myGpio, GPIO_Number_29, GPIO_29_Mode_SCITXDA);
     
-    // Configure GPIO 0-6 as outputs, 10's digit
-   // GPIO_setMode(myGpio, GPIO_Number_0, GPIO_0_Mode_GeneralPurpose);
-    //GPIO_setMode(myGpio, GPIO_Number_1, GPIO_0_Mode_GeneralPurpose);
-    GPIO_setMode(myGpio, GPIO_Number_2, GPIO_0_Mode_GeneralPurpose);
-    GPIO_setMode(myGpio, GPIO_Number_3, GPIO_0_Mode_GeneralPurpose);
-    GPIO_setMode(myGpio, GPIO_Number_4, GPIO_0_Mode_GeneralPurpose);
-    GPIO_setMode(myGpio, GPIO_Number_5, GPIO_0_Mode_GeneralPurpose);
-    GPIO_setMode(myGpio, GPIO_Number_6, GPIO_0_Mode_GeneralPurpose);
-
-    //7, 12, 16-19, 28 for 1's digit
-    GPIO_setMode(myGpio, GPIO_Number_7, GPIO_0_Mode_GeneralPurpose);
-	GPIO_setMode(myGpio, GPIO_Number_12, GPIO_0_Mode_GeneralPurpose);
-	GPIO_setMode(myGpio, GPIO_Number_16, GPIO_0_Mode_GeneralPurpose);
-	GPIO_setMode(myGpio, GPIO_Number_17, GPIO_0_Mode_GeneralPurpose);
-	GPIO_setMode(myGpio, GPIO_Number_18, GPIO_0_Mode_GeneralPurpose);
-	GPIO_setMode(myGpio, GPIO_Number_19, GPIO_0_Mode_GeneralPurpose);
-	GPIO_setMode(myGpio, GPIO_Number_28, GPIO_0_Mode_GeneralPurpose);
-    
-    //GPIO_setDirection(myGpio, GPIO_Number_0, GPIO_Direction_Output);
-    //GPIO_setDirection(myGpio, GPIO_Number_1, GPIO_Direction_Output);
-    GPIO_setDirection(myGpio, GPIO_Number_2, GPIO_Direction_Output);
-    GPIO_setDirection(myGpio, GPIO_Number_3, GPIO_Direction_Output);
-    GPIO_setDirection(myGpio, GPIO_Number_4, GPIO_Direction_Output);
-    GPIO_setDirection(myGpio, GPIO_Number_5, GPIO_Direction_Output);
-    GPIO_setDirection(myGpio, GPIO_Number_6, GPIO_Direction_Output);
-    
-    GPIO_setDirection(myGpio, GPIO_Number_7, GPIO_Direction_Output);
-	GPIO_setDirection(myGpio, GPIO_Number_12, GPIO_Direction_Output);
-	GPIO_setDirection(myGpio, GPIO_Number_16, GPIO_Direction_Output);
-	GPIO_setDirection(myGpio, GPIO_Number_17, GPIO_Direction_Output);
-	GPIO_setDirection(myGpio, GPIO_Number_18, GPIO_Direction_Output);
-	GPIO_setDirection(myGpio, GPIO_Number_19, GPIO_Direction_Output);
-	GPIO_setDirection(myGpio, GPIO_Number_28, GPIO_Direction_Output);
+    int i;
+    for (i = 0; i < 7; i++)
+    {
+    	GPIO_setMode(myGpio, digit1Pins[i], GPIO_0_Mode_GeneralPurpose);
+    	GPIO_setDirection(myGpio, digit1Pins[i], GPIO_Direction_Output);
+    	GPIO_setMode(myGpio, digit2Pins[i], GPIO_0_Mode_GeneralPurpose);
+    	GPIO_setDirection(myGpio, digit2Pins[i], GPIO_Direction_Output);
+    }
 
 	GPIO_setPullUp(myGpio, GPIO_Number_0, GPIO_PullUp_Disable);
 	GPIO_setPullUp(myGpio, GPIO_Number_1, GPIO_PullUp_Disable);
