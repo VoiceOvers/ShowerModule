@@ -115,12 +115,13 @@ SCI_Handle mySci;
 PWM_Handle myPwm1;
 
 uint8_t digit[] = {0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B};
-double motorIncrement = (MOTOR_MIN + MOTOR_MAX) / MOTOR_POSITIONS;
+double motorIncrement = (MOTOR_MAX - MOTOR_MIN) / MOTOR_POSITIONS;
 
-GPIO_Number_e digit1Pins[] = {GPIO_Number_2, GPIO_Number_3, GPIO_Number_4, GPIO_Number_5, GPIO_Number_6, GPIO_Number_7, GPIO_Number_12}; //Avoid 0 and 1 for PWM
-GPIO_Number_e digit2Pins[] = {GPIO_Number_16, GPIO_Number_17, GPIO_Number_18, GPIO_Number_19, GPIO_Number_32, GPIO_Number_33, GPIO_Number_34}; //Avoid 28 and 29 for console output
-GPIO_Number_e upButton = GPIO_Number_35;
-GPIO_Number_e downButton = GPIO_Number_36;
+//34 is max pin available on Launchpad, 38 is max pin available on C2000 chip
+GPIO_Number_e digit1Pins[] = {GPIO_Number_3, GPIO_Number_4, GPIO_Number_5, GPIO_Number_6, GPIO_Number_7, GPIO_Number_12, GPIO_Number_16}; //Avoid 0 for PWM
+GPIO_Number_e digit2Pins[] = {GPIO_Number_17, GPIO_Number_18, GPIO_Number_19, GPIO_Number_32, GPIO_Number_33, GPIO_Number_34, GPIO_Number_35}; //Avoid 28 and 29 for console output, 32 and 33 for multiplexing
+GPIO_Number_e upButton = GPIO_Number_1;
+GPIO_Number_e downButton = GPIO_Number_2;
 
 // SCIA  8-bit word, baud rate 0x000F, default, 1 STOP bit, no parity
 void scia_init()
@@ -212,9 +213,10 @@ double pwm_period_for_motor(int position)
 void turn_motor_to(int position)
 {
 	display_on_LCD(position);
-	int sysclkout = 60000000;
+	float sysclkout = 60000000;
 	int highSpeedClkDiv = 10;
 	int clkDiv = 1;
+	printf("Period should be %d ms\n", pwm_period_for_motor(position) * 1000);
 	int PWMPeriod = (pwm_period_for_motor(position) * sysclkout) / (highSpeedClkDiv * clkDiv);
 	int halfPWMPeriod = PWMPeriod / 2;
 
@@ -223,7 +225,7 @@ void turn_motor_to(int position)
     PWM_setCmpB(myPwm1, halfPWMPeriod);    // Set compare B value
     PWM_setPeriod(myPwm1, PWMPeriod);
 
-    epwm1_info.EPwmMaxCMPA = PWMPEriod;
+    epwm1_info.EPwmMaxCMPA = PWMPeriod;
     epwm1_info.EPwmMinCMPA = halfPWMPeriod;
     epwm1_info.EPwmMaxCMPB = PWMPeriod;
     epwm1_info.EPwmMinCMPB = halfPWMPeriod;
@@ -335,10 +337,9 @@ void main()
     memcpy(&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);
 #endif      
 
-    // Initalize GPIO
     // Enable XCLOCKOUT to allow monitoring of oscillator 1
-    GPIO_setMode(myGpio, GPIO_Number_18, GPIO_18_Mode_XCLKOUT);
-    CLK_setClkOutPreScaler(myClk, CLK_ClkOutPreScaler_SysClkOut_by_1);
+    //GPIO_setMode(myGpio, GPIO_Number_18, GPIO_18_Mode_XCLKOUT);
+    //CLK_setClkOutPreScaler(myClk, CLK_ClkOutPreScaler_SysClkOut_by_1);
 
     // Setup a debug vector table and enable the PIE
     PIE_setDebugIntVectorTable(myPie);
@@ -367,9 +368,9 @@ void main()
     }
 
 	GPIO_setPullUp(myGpio, GPIO_Number_0, GPIO_PullUp_Disable);
-	GPIO_setPullUp(myGpio, GPIO_Number_1, GPIO_PullUp_Disable);
+	//GPIO_setPullUp(myGpio, GPIO_Number_1, GPIO_PullUp_Disable);
 	GPIO_setMode(myGpio, GPIO_Number_0, GPIO_0_Mode_EPWM1A);
-	GPIO_setMode(myGpio, GPIO_Number_1, GPIO_1_Mode_EPWM1B);
+	//GPIO_setMode(myGpio, GPIO_Number_1, GPIO_1_Mode_EPWM1B);
 
     GPIO_setMode(myGpio, upButton, GPIO_0_Mode_GeneralPurpose);
     GPIO_setDirection(myGpio, upButton, GPIO_Direction_Input);
@@ -402,20 +403,22 @@ void main()
     setvbuf(stdout, NULL, _IONBF, 0);
 
     int currentPosition = 0;
-    turn_motor_to(currentPosition);
+    //turn_motor_to(currentPosition);
+    //printf("Starting");
 
     //Main program loop
     for(;;)
     {
+    	//printf("ahoy!");
 		if (GPIO_getData(myGpio, upButton) == 1)
 		{
-			printf("up, ");
+			printf("up %i, ", currentPosition);
 			if (currentPosition < 99)
 				turn_motor_to(++currentPosition);
 		}
 		else if (GPIO_getData(myGpio, downButton) == 1)
 		{
-			printf("down, ");
+			printf("down %i, ", currentPosition);
 			if (currentPosition > 0)
 				turn_motor_to(--currentPosition);
 		}
