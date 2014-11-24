@@ -49,7 +49,6 @@
 #include <file.h>
 
 #include "DSP28x_Project.h"     // DSP28x Headerfile
-#include "ti_ascii.h"
 
 #include "f2802x_common/include/adc.h"
 #include "f2802x_common/include/clk.h"
@@ -74,7 +73,7 @@
 //printf ("Leading text "BYTETOBINARYPATTERN, BYTETOBINARY(byte));
 #define MOTOR_MAX 3.89 //in milliseconds
 #define MOTOR_MIN 1.8
-#define MOTOR_POSITIONS 100
+#define MOTOR_POSITIONS 10
 
 // Configure the period for each timer
 #define EPWM1_TIMER_TBPRD  23340  // Period register
@@ -118,7 +117,7 @@ uint8_t digit[] = {0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B};
 double motorIncrement = (MOTOR_MAX - MOTOR_MIN) / MOTOR_POSITIONS;
 
 //34 is max pin available on Launchpad, 38 is max pin available on C2000 chip
-GPIO_Number_e digit1Pins[] = {GPIO_Number_3, GPIO_Number_4, GPIO_Number_5, GPIO_Number_6, GPIO_Number_7, GPIO_Number_12, GPIO_Number_16}; //Avoid 0 for PWM
+//GPIO_Number_e digit1Pins[] = {GPIO_Number_3, GPIO_Number_4, GPIO_Number_5, GPIO_Number_6, GPIO_Number_7, GPIO_Number_12, GPIO_Number_16}; //Avoid 0 for PWM
 GPIO_Number_e digit2Pins[] = {GPIO_Number_17, GPIO_Number_18, GPIO_Number_19, GPIO_Number_32, GPIO_Number_33, GPIO_Number_34, GPIO_Number_35}; //Avoid 28 and 29 for console output, 32 and 33 for multiplexing
 GPIO_Number_e upButton = GPIO_Number_1;
 GPIO_Number_e downButton = GPIO_Number_2;
@@ -168,15 +167,15 @@ void scia_init()
     return;
 }
 
-//Take a number 0-99 and displays it on the LCD
+//Take a number 0-9 and displays it on the LCD
 void display_on_LCD(int number)
 {
-	if (number < 0 || number > 99)
+	if (number < 0 || number > 9)
 		return;
 
-	int tens = number / 10;
+	//int tens = number / 10;
 	int ones = number % 10;
-	uint8_t encodedTen = digit[tens];
+	//uint8_t encodedTen = digit[tens];
 	uint8_t encodedOne = digit[ones];
 
 	int counter = 0;
@@ -186,10 +185,10 @@ void display_on_LCD(int number)
 	//01000000 because encoding is 7 bits long
 	for (bit = 0x40; bit; bit >>= 1)
 	{
-		if ((bit & encodedTen) >> downCounter == 1)
-			GPIO_setHigh(myGpio, digit1Pins[counter]);
-		else
-			GPIO_setLow(myGpio, digit1Pins[counter]);
+		//if ((bit & encodedTen) >> downCounter == 1)
+		//	GPIO_setHigh(myGpio, digit1Pins[counter]);
+		//else
+			//GPIO_setLow(myGpio, digit1Pins[counter]);
 		if ((bit & encodedOne) >> downCounter == 1)
 			GPIO_setHigh(myGpio, digit2Pins[counter]);
 		else
@@ -361,8 +360,8 @@ void main()
     int i;
     for (i = 0; i < 7; i++)
     {
-    	GPIO_setMode(myGpio, digit1Pins[i], GPIO_0_Mode_GeneralPurpose);
-    	GPIO_setDirection(myGpio, digit1Pins[i], GPIO_Direction_Output);
+    	//GPIO_setMode(myGpio, digit1Pins[i], GPIO_0_Mode_GeneralPurpose);
+    	//GPIO_setDirection(myGpio, digit1Pins[i], GPIO_Direction_Output);
     	GPIO_setMode(myGpio, digit2Pins[i], GPIO_0_Mode_GeneralPurpose);
     	GPIO_setDirection(myGpio, digit2Pins[i], GPIO_Direction_Output);
     }
@@ -403,7 +402,7 @@ void main()
     setvbuf(stdout, NULL, _IONBF, 0);
 
     int currentPosition = 0;
-    //turn_motor_to(currentPosition);
+    turn_motor_to(currentPosition);
     //printf("Starting");
 
     //Main program loop
@@ -413,7 +412,7 @@ void main()
 		if (GPIO_getData(myGpio, upButton) == 1)
 		{
 			printf("up %i, ", currentPosition);
-			if (currentPosition < 99)
+			if (currentPosition < 9)
 				turn_motor_to(++currentPosition);
 		}
 		else if (GPIO_getData(myGpio, downButton) == 1)
