@@ -122,6 +122,8 @@ GPIO_Number_e digit2Pins[] = {GPIO_Number_17, GPIO_Number_18, GPIO_Number_19, GP
 GPIO_Number_e upButton = GPIO_Number_1;
 GPIO_Number_e downButton = GPIO_Number_2;
 
+bool canTurnOn = false;
+
 // SCIA  8-bit word, baud rate 0x000F, default, 1 STOP bit, no parity
 void scia_init()
 {
@@ -379,6 +381,11 @@ void main()
     GPIO_setDirection(myGpio, downButton, GPIO_Direction_Input);
     GPIO_setPullUp(myGpio, downButton, GPIO_PullUp_Disable);
 
+    //Pin in for turn on command
+    GPIO_setMode(myGpio, GPIO_Number_3, GPIO_3_Mode_GeneralPurpose);
+    GPIO_setDirection(myGpio, GPIO_Number_3, GPIO_Direction_Input);
+    GPIO_setPullUp(myGpio, GPIO_Number_3, GPIO_PullUp_Disable);
+
 	// Register interrupt handlers in the PIE vector table
 	PIE_registerPieIntHandler(myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_1, (intVec_t)&epwm1_isr);
 
@@ -420,6 +427,17 @@ void main()
 			printf("down %i, ", currentPosition);
 			if (currentPosition > 0)
 				turn_motor_to(--currentPosition);
+		}
+
+		if (GPIO_getData(myGpio, GPIO_Number_3) == 1 && canTurnOn)
+		{
+			currentPosition = 8;
+			turn_motor_to(currentPosition);
+			canTurnOn = false;
+		}
+		else if (GPIO_getData(myGpio, GPIO_Number_3) == 0)
+		{
+			canTurnOn = true;
 		}
 
 		DELAY_US(75000);
