@@ -118,7 +118,7 @@ double motorIncrement = (MOTOR_MAX - MOTOR_MIN) / MOTOR_POSITIONS;
 
 //34 is max pin available on Launchpad, 38 is max pin available on C2000 chip
 //GPIO_Number_e digit1Pins[] = {GPIO_Number_3, GPIO_Number_4, GPIO_Number_5, GPIO_Number_6, GPIO_Number_7, GPIO_Number_12, GPIO_Number_16}; //Avoid 0 for PWM
-GPIO_Number_e digit2Pins[] = {GPIO_Number_17, GPIO_Number_18, GPIO_Number_19, GPIO_Number_32, GPIO_Number_33, GPIO_Number_34, GPIO_Number_35}; //Avoid 28 and 29 for console output, 32 and 33 for multiplexing
+GPIO_Number_e digit2Pins[] = {GPIO_Number_17, GPIO_Number_4, GPIO_Number_5, GPIO_Number_6, GPIO_Number_7, GPIO_Number_12, GPIO_Number_16}; //Avoid 28 and 29 for console output, 32 and 33 for multiplexing
 GPIO_Number_e upButton = GPIO_Number_1;
 GPIO_Number_e downButton = GPIO_Number_2;
 

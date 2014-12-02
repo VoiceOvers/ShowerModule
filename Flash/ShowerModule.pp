@@ -36,6 +36,17 @@ ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_com
 ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/F2802x_EPwm_defines.h
 ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/F2802x_I2c_defines.h
 ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/F2802x_DefaultISR.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/adc.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/cpu.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/clk.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/pwm.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/flash.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/gpio.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/pie.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/pll.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/sci.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/sci_io.h
+ShowerModule.obj: C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/wdog.h
 
 ../ShowerModule.c: 
 c:/ti/ccsv6/tools/compiler/c2000_6.2.8/include/stdio.h: 
@@ -73,3 +84,14 @@ C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/F2802x
 C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/F2802x_EPwm_defines.h: 
 C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/F2802x_I2c_defines.h: 
 C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/F2802x_DefaultISR.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/adc.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/cpu.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/clk.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/pwm.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/flash.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/gpio.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/pie.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/pll.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/sci.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/sci_io.h: 
+C:/ti/controlSUITE/development_kits/C2000_LaunchPad/f2802x_common/include/wdog.h: 
